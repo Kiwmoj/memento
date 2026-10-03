@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#faf7f2" />
+    <meta name="description" content="WhereDidI remembers what an item is, where it is, who has it, and why it matters." />
+    <title>WhereDidI | Remember where everything is</title>
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- MEMENTO_ACCOUNT_CONTEXT -->
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="i-pin" viewBox="0 0 24 24"><path d="m15 4 5 5-4 1-3 3-1 4-2-2 1-4 3-3 1-4Z"/><path d="m9 15-4.5 4.5"/></symbol>
+        <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8.5 21h7"/></symbol>
+        <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 4 4 3-3 4 4"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+        <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13M10 11v6M14 11v6"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20h-19Z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+        <symbol id="i-all" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5 12 4h7.5v7.5L11 20Z"/><circle cx="15.5" cy="8.5" r="1.2"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4.5H5v15h5M14 8l4 4-4 4M18 12H9"/></symbol>
+        <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11" rx="2"/><path d="M7 10.5h.1M11 10.5h.1M15 10.5h.1M7.5 14h9"/></symbol>
+        <symbol id="i-loader" viewBox="0 0 24 24"><path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.3 6.3l2.1 2.1M15.6 15.6l2.1 2.1M6.3 17.7l2.1-2.1M15.6 8.4l2.1-2.1"/></symbol>
+      </defs>
+    </svg>
+
+    <a class="skip-link" href="#main">Skip to memories</a>
+
+    <div class="app">
+      <header class="mobile-bar">
+        <button type="button" class="icon-btn" id="menu-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"></use></svg>
+        </button>
+        <span class="brand-name">WhereDidI</span>
+        <button type="button" class="icon-btn" data-open-memory aria-label="Add a memory">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>
+        </button>
+      </header>
+
+      <div class="scrim" id="scrim" hidden></div>
+
+      <aside class="sidebar" id="sidebar" aria-label="Sidebar">
+        <a class="brand" href="/" aria-label="WhereDidI home">
+          <img src="/logo.svg" alt="" width="32" height="32" />
+          <span class="brand-name">WhereDidI</span>
+        </a>
+
+        <nav aria-label="Memory views">
+          <p class="nav-heading">Library</p>
+          <ul class="nav-list">
+            <li><button type="button" class="nav-item" data-filter="all"><svg class="icon" aria-hidden="true"><use href="#i-all"></use></svg><span>All memories</span><span class="count" id="count-all">0</span></button></li>
+            <li><button type="button" class="nav-item" data-filter="pinned"><svg class="icon" aria-hidden="true"><use href="#i-pin"></use></svg><span>Pinned</span><span class="count" id="count-pinned">0</span></button></li>
+          </ul>
+          <p class="nav-heading">Categories</p>
+          <ul class="nav-list" id="category-nav"></ul>
+        </nav>
+
+        <div class="account">
+          <div class="account-info">
+            <span class="avatar" id="account-initial" aria-hidden="true">?</span>
+            <span class="account-text"><strong id="account-name">Guest</strong><span id="account-email"></span></span>
+          </div>
+          <button type="button" class="btn btn-quiet btn-block" id="signout-btn">
+            <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>Sign out
+          </button>
+        </div>
+      </aside>
+
+      <main class="main" id="main" tabindex="-1">
+        <section class="hero" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow">Your external memory</p>
+            <h1 id="page-title">Where did I put it?</h1>
+            <p class="lead">Save what something is, where it is, who has it and why it matters, then find it by typing or asking out loud.</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-lg" data-open-memory>
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg>Add memory
+          </button>
+        </section>
+
+        <section class="finder" aria-label="Search and voice">
+          <form class="search" id="search-form" role="search" novalidate>
+            <label class="sr-only" for="search-input">Search memories</label>
+            <svg class="icon search-icon" aria-hidden="true"><use href="#i-search"></use></svg>
+            <input id="search-input" type="search" autocomplete="off" placeholder="Try &quot;passport&quot; or &quot;where are my keys?&quot;" />
+            <button type="button" class="icon-btn" id="search-clear" aria-label="Clear search" hidden>
+              <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+            </button>
+            <button type="button" class="btn btn-voice" id="mic-btn" aria-pressed="false">
+              <svg class="icon" aria-hidden="true"><use href="#i-mic"></use></svg><span id="mic-label">Ask by voice</span>
+            </button>
+          </form>
+
+          <div class="voice" id="voice" data-state="idle">
+            <div class="voice-status" role="status" aria-live="polite">
+              <span class="voice-icon" aria-hidden="true"><svg class="icon"><use id="voice-icon-use" href="#i-mic"></use></svg></span>
+              <p><strong id="voice-label">Voice ready</strong><span id="voice-detail">Press &ldquo;Ask by voice&rdquo; and say something like &ldquo;where is my passport?&rdquo;</span></p>
+            </div>
+            <div class="voice-tools">
+              <button type="button" class="btn btn-quiet btn-sm" id="type-toggle" aria-expanded="false" aria-controls="ask-form">
+                <svg class="icon" aria-hidden="true"><use href="#i-keyboard"></use></svg>Type a question instead
+              </button>
+              <label class="switch"><input type="checkbox" id="speak-toggle" checked /><span>Read answers aloud</span></label>
+            </div>
+            <form id="ask-form" class="ask-form" hidden novalidate>
+              <label for="ask-input">Ask a question</label>
+              <div class="ask-row">
+                <input id="ask-input" type="text" autocomplete="off" placeholder="Where did I leave the spare keys?" />
+                <button type="submit" class="btn btn-primary">Ask</button>
+              </div>
+            </form>
+            <details class="mic-help">
+              <summary>About microphone access</summary>
+              <p>The first time you use voice, your browser asks for microphone permission. Choose <strong>Allow</strong>. If you blocked it, click the lock icon beside the address bar, set Microphone to Allow, then reload.</p>
+              <p>Voice uses your browser&rsquo;s built-in speech recognition where available (Chrome and Edge may process audio with their own speech service). Other browsers, such as Firefox, record from your microphone and transcribe on this computer using an offline model. WhereDidI never stores audio. Typed questions stay entirely on this device.</p>
+            </details>
+          </div>
+
+          <div class="answer" id="answer" hidden>
+            <div class="answer-body">
+              <p class="answer-kicker" id="answer-kicker">Answer</p>
+              <p class="answer-text" id="answer-text"></p>
+            </div>
+            <button type="button" class="icon-btn" id="answer-close" aria-label="Dismiss answer">
+              <svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg>
+            </button>
+          </div>
+        </section>
+
+        <section aria-labelledby="list-title" id="list-section">
+          <div class="list-head">
+            <h2 id="list-title">All memories</h2>
+            <p class="result-count" id="result-count" role="status" aria-live="polite"></p>
+          </div>
+          <div class="grid" id="grid">
+            <div class="card skeleton" aria-hidden="true"></div>
+            <div class="card skeleton" aria-hidden="true"></div>
+            <div class="card skeleton" aria-hidden="true"></div>
+          </div>
+          <div class="empty" id="empty" hidden></div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="memory-dialog" aria-labelledby="dialog-title">
+      <form id="memory-form" novalidate>
+        <header class="dialog-head">
+          <h2 id="dialog-title">Save a memory</h2>
+          <button type="button" class="icon-btn" data-close aria-label="Close dialog"><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button>
+        </header>
+        <div class="dialog-body">
+          <p class="form-note">Fields marked <span aria-hidden="true">*</span><span class="sr-only">with an asterisk</span> are required.</p>
+          <div class="field">
+            <label for="f-object">What is it? <span aria-hidden="true">*</span></label>
+            <input id="f-object" name="object" type="text" maxlength="80" autocomplete="off" placeholder="Passport" aria-describedby="e-object" required />
+            <p class="field-error" id="e-object" role="alert" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-location">Where is it, or who has it? <span aria-hidden="true">*</span></label>
+            <input id="f-location" name="location" type="text" maxlength="120" autocomplete="off" placeholder="Blue drawer, or with Maria" aria-describedby="e-location" required />
+            <p class="field-error" id="e-location" role="alert" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-reason">Why does it matter?</label>
+            <textarea id="f-reason" name="reason" rows="2" maxlength="200" placeholder="Needed for the trip on Friday"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="f-category">Category <span aria-hidden="true">*</span></label>
+              <input id="f-category" name="category" type="text" list="category-list" maxlength="30" autocomplete="off" placeholder="Home" aria-describedby="e-category" required />
+              <datalist id="category-list"></datalist>
+              <p class="field-error" id="e-category" role="alert" hidden></p>
+            </div>
+            <div class="field">
+              <label for="f-date">Date (optional)</label>
+              <input id="f-date" name="date" type="date" />
+            </div>
+          </div>
+
+          <fieldset class="photo">
+            <legend>Photo (optional)</legend>
+            <div class="photo-actions">
+              <button type="button" class="btn" id="photo-camera"><svg class="icon" aria-hidden="true"><use href="#i-camera"></use></svg>Take photo</button>
+              <button type="button" class="btn" id="photo-choose"><svg class="icon" aria-hidden="true"><use href="#i-image"></use></svg>Choose image</button>
+              <button type="button" class="btn btn-quiet" id="photo-remove" hidden><svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>Remove photo</button>
+              <input type="file" id="photo-file" accept="image/*" hidden />
+            </div>
+            <p class="notice notice-error" id="photo-error" role="alert" hidden></p>
+            <div class="camera" id="camera-view" hidden>
+              <video id="camera-video" playsinline muted></video>
+              <div class="camera-actions">
+                <button type="button" class="btn btn-primary" id="camera-capture"><svg class="icon" aria-hidden="true"><use href="#i-camera"></use></svg>Capture</button>
+                <button type="button" class="btn" id="camera-cancel">Cancel camera</button>
+              </div>
+            </div>
+            <figure class="photo-preview" id="photo-preview" hidden>
+              <img id="photo-img" alt="Preview of the selected photo" />
+              <figcaption>Photo preview. It stays on this device.</figcaption>
+            </figure>
+          </fieldset>
+        </div>
+        <footer class="dialog-foot">
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-btn">Save memory</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog id="confirm-dialog" class="small" aria-labelledby="confirm-title">
+      <form method="dialog">
+        <div class="dialog-body">
+          <h2 id="confirm-title">Delete this memory?</h2>
+          <p id="confirm-text" class="muted"></p>
+        </div>
+        <footer class="dialog-foot">
+          <button type="submit" value="cancel" class="btn">Keep it</button>
+          <button type="submit" value="delete" class="btn btn-danger" id="confirm-delete">Delete</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

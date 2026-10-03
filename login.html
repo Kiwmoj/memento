@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123d37" />
+    <meta name="description" content="Sign in to your Memento memory workspace." />
+    <title>WhereDidI | Sign in</title>
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #173b36;
+        --muted: #677873;
+        --line: #dbe5df;
+        --paper: #f4f7f2;
+        --white: #fff;
+        --leaf: #137a68;
+        --leaf-dark: #0d574e;
+        --sun: #f4b74b;
+        --coral: #e98167;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Aptos", "Segoe UI", sans-serif;
+      }
+
+      button, input { font: inherit; }
+
+      .page-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        background:
+          linear-gradient(135deg, rgba(19, 122, 104, .04), transparent 45%),
+          radial-gradient(ellipse at 90% 95%, rgba(244, 183, 75, .14), transparent 44%),
+          var(--paper);
+      }
+
+      .topbar {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px clamp(20px, 5vw, 72px);
+        background: #123d37;
+        color: white;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .brand img { width: 34px; height: 34px; }
+      .brand strong { font-family: Georgia, serif; font-size: 22px; font-weight: 600; }
+      .topbar-note { color: #d4e5dd; font-size: 13px; }
+
+      .main-layout {
+        width: min(1120px, calc(100% - 40px));
+        display: grid;
+        grid-template-columns: minmax(0, .95fr) minmax(340px, .8fr);
+        align-items: center;
+        gap: clamp(40px, 9vw, 120px);
+        margin: 42px auto;
+      }
+
+      .welcome-copy { max-width: 520px; animation: arrive .55s ease-out both; }
+      .eyebrow { margin: 0 0 16px; color: var(--leaf); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+      h1 { max-width: 500px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(42px, 5.2vw, 68px); font-weight: 500; line-height: 1.04; }
+      .welcome-copy > p:last-of-type { max-width: 420px; margin: 22px 0 30px; color: var(--muted); font-size: 17px; line-height: 1.65; }
+
+      .memory-preview {
+        position: relative;
+        width: min(430px, 100%);
+        min-height: 208px;
+        padding: 25px;
+        overflow: hidden;
+        border: 1px solid #e3d6ba;
+        border-radius: 12px;
+        background: #fff9ec;
+        box-shadow: 0 18px 48px rgba(27, 55, 46, .08);
+        transform: rotate(-1.2deg);
+      }
+
+      .memory-preview::after {
+        position: absolute;
+        right: -26px;
+        bottom: -74px;
+        width: 178px;
+        height: 178px;
+        border: 1px solid rgba(19, 122, 104, .22);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .preview-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+      .preview-category { color: #8e6841; font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+      .preview-mark { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border-radius: 9px; background: #f3d37d; color: #664c1d; font-size: 17px; }
+      .memory-preview h2 { margin: 22px 0 7px; font-family: Georgia, serif; font-size: 32px; font-weight: 500; }
+      .memory-preview p { margin: 0; color: #69736c; font-size: 14px; }
+      .preview-rule { width: 58%; height: 1px; margin-top: 24px; background: #e4d9c6; }
+      .preview-detail { margin-top: 11px !important; font-size: 12px !important; }
+
+      .auth-panel {
+        width: 100%;
+        max-width: 430px;
+        padding: clamp(24px, 4vw, 38px);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--white);
+        box-shadow: 0 20px 55px rgba(23, 59, 54, .08);
+        animation: arrive .65s .08s ease-out both;
+      }
+
+      .auth-panel h2 { margin: 0; font-family: Georgia, serif; font-size: 31px; font-weight: 500; }
+      .auth-intro { margin: 9px 0 24px; color: var(--muted); font-size: 14px; }
+
+      .mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 24px; padding: 4px; border-radius: 8px; background: #edf3ef; }
+      .mode-button { min-height: 40px; border: 0; border-radius: 6px; background: transparent; color: #53665e; cursor: pointer; font-size: 13px; font-weight: 700; }
+      .mode-button[aria-pressed="true"] { background: white; color: var(--leaf-dark); box-shadow: 0 1px 4px rgba(23, 59, 54, .12); }
+
+      .auth-form { display: grid; gap: 15px; }
+      .field { display: grid; gap: 7px; color: #334d45; font-size: 13px; font-weight: 700; }
+      .field[hidden] { display: none; }
+      .field input { width: 100%; min-height: 46px; padding: 11px 12px; border: 1px solid #cad8d0; border-radius: 6px; outline: none; background: white; color: var(--ink); }
+      .field input:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(19, 122, 104, .13); }
+
+      .submit-button { min-height: 48px; margin-top: 3px; border: 0; border-radius: 6px; background: var(--leaf); color: white; cursor: pointer; font-size: 14px; font-weight: 800; transition: background .18s ease, transform .18s ease; }
+      .submit-button:hover { background: var(--leaf-dark); }
+      .submit-button:active { transform: translateY(1px); }
+      .submit-button:disabled { cursor: wait; opacity: .7; }
+      .feedback { min-height: 20px; margin: -5px 0 0; color: #a13425; font-size: 13px; line-height: 1.4; }
+      .security-note { display: flex; gap: 9px; margin: 19px 0 0; padding-top: 16px; border-top: 1px solid #edf1ed; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .security-note span { color: var(--leaf); }
+      .footer { padding: 18px 20px 25px; color: #72817a; text-align: center; font-size: 12px; }
+
+      @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+      @media (max-width: 760px) {
+        .main-layout { grid-template-columns: 1fr; gap: 28px; width: min(500px, calc(100% - 32px)); margin: 30px auto; }
+        .welcome-copy { display: grid; grid-template-columns: 1fr; }
+        h1 { font-size: 46px; }
+        .welcome-copy > p:last-of-type { margin: 14px 0 20px; font-size: 15px; }
+        .memory-preview { display: none; }
+        .auth-panel { max-width: none; }
+        .topbar { min-height: 64px; padding-inline: 18px; }
+        .topbar-note { max-width: 120px; text-align: right; font-size: 11px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/login" aria-label="Memento home">
+          <img src="/logo.svg" alt="" />
+          <strong>WhereDidI</strong>
+        </a>
+        <span class="topbar-note">A thoughtful place for everyday details</span>
+      </header>
+
+      <main class="main-layout">
+        <section class="welcome-copy" aria-labelledby="welcome-heading">
+          <p class="eyebrow">Your personal memory space</p>
+          <h1 id="welcome-heading">Keep the little things close.</h1>
+          <p>Save where things are, find them when you need them, and keep your plans in one calm workspace.</p>
+          <article class="memory-preview" aria-label="Example saved memory">
+            <div class="preview-top"><span class="preview-category">Travel · saved memory</span><span class="preview-mark" aria-hidden="true">✦</span></div>
+            <h2>Passport</h2>
+            <p>Blue drawer</p>
+            <div class="preview-rule"></div>
+            <p class="preview-detail">For the trip on Friday</p>
+          </article>
+        </section>
+
+        <section class="auth-panel" aria-labelledby="auth-heading">
+          <h2 id="auth-heading">Welcome back</h2>
+          <p class="auth-intro" id="auth-intro">Sign in to open your memory workspace.</p>
+          <div class="mode-switch" role="group" aria-label="Account action">
+            <button class="mode-button" type="button" data-mode="login" aria-pressed="true">Sign in</button>
+            <button class="mode-button" type="button" data-mode="register" aria-pressed="false">Create account</button>
+          </div>
+          <form class="auth-form" id="auth-form">
+            <label class="field" id="name-field" hidden>
+              <span>Your name</span>
+              <input name="name" type="text" autocomplete="name" maxlength="80" />
+            </label>
+            <label class="field">
+              <span>Email address</span>
+              <input name="email" type="email" autocomplete="email" maxlength="254" required />
+            </label>
+            <label class="field">
+              <span>Password</span>
+              <input name="password" type="password" autocomplete="current-password" minlength="8" maxlength="256" required />
+            </label>
+            <button class="submit-button" type="submit">Sign in</button>
+            <p class="feedback" id="auth-feedback" role="status" aria-live="polite"></p>
+          </form>
+          <p class="security-note"><span aria-hidden="true">●</span><span>Accounts run on this project’s local server. Passwords are stored as one-way hashes; there are no purchases or payment details.</span></p>
+        </section>
+      </main>
+
+      <footer class="footer">WhereDidI · Your memories stay on this device.</footer>
+    </div>
+
+    <script>
+      (() => {
+        const form = document.querySelector('#auth-form');
+        const nameField = document.querySelector('#name-field');
+        const passwordInput = form.elements.password;
+        const feedback = document.querySelector('#auth-feedback');
+        const submitButton = form.querySelector('.submit-button');
+        const heading = document.querySelector('#auth-heading');
+        const intro = document.querySelector('#auth-intro');
+        let mode = window.location.pathname === '/register' ? 'register' : 'login';
+
+        const setMode = (nextMode) => {
+          mode = nextMode;
+          const registering = mode === 'register';
+          nameField.hidden = !registering;
+          nameField.querySelector('input').required = registering;
+          passwordInput.autocomplete = registering ? 'new-password' : 'current-password';
+          document.title = registering ? 'WhereDidI | Create account' : 'WhereDidI | Sign in';
+          heading.textContent = registering ? 'Create your account' : 'Welcome back';
+          intro.textContent = registering ? 'Set up your personal memory workspace.' : 'Sign in to open your memory workspace.';
+          submitButton.textContent = registering ? 'Create account' : 'Sign in';
+          feedback.textContent = '';
+          document.querySelectorAll('[data-mode]').forEach((button) => {
+            button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
+          });
+        };
+
+        document.querySelectorAll('[data-mode]').forEach((button) => {
+          button.addEventListener('click', () => setMode(button.dataset.mode));
+        });
+        setMode(mode);
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          feedback.textContent = '';
+          submitButton.disabled = true;
+          submitButton.textContent = mode === 'register' ? 'Creating account…' : 'Signing in…';
+          const formData = new FormData(form);
+          const payload = {
+            name: String(formData.get('name') || '').trim(),
+            email: String(formData.get('email') || '').trim(),
+            password: String(formData.get('password') || '')
+          };
+
+          try {
+            const response = await fetch(`/api/auth/${mode}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Sign-in failed. Please try again.');
+            window.location.assign('/');
+          } catch (error) {
+            feedback.textContent = error.message || 'The server could not be reached. Make sure Memento is running and try again.';
+            submitButton.disabled = false;
+            submitButton.textContent = mode === 'register' ? 'Create account' : 'Sign in';
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

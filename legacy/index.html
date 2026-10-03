@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123d37" />
+    <meta name="description" content="Memento — a brighter memory assistant for your day." />
+    <title>Memento — Smart memory for your day</title>
+    <!-- MEMENTO_ACCOUNT_CONTEXT -->
+    <script>
+      (() => {
+        const accountId = window.MEMENTO_ACCOUNT?.id;
+        if (accountId == null) return;
+
+        const accountScopedKeys = new Set(['wdi-memories', 'memento-tasks-v1']);
+        const prefix = `memento-account-${accountId}:`;
+        const nativeGet = Storage.prototype.getItem;
+        const nativeSet = Storage.prototype.setItem;
+        const nativeRemove = Storage.prototype.removeItem;
+        const targetKey = (key) => {
+          const originalKey = String(key);
+          return accountScopedKeys.has(originalKey) ? `${prefix}${originalKey}` : originalKey;
+        };
+
+        Storage.prototype.getItem = function (key) {
+          const originalKey = String(key);
+          if (this === window.localStorage && accountScopedKeys.has(originalKey)) {
+            const scopedKey = targetKey(originalKey);
+            if (String(accountId) === '1' && nativeGet.call(this, scopedKey) === null) {
+              const legacyValue = nativeGet.call(this, originalKey);
+              if (legacyValue !== null) {
+                nativeSet.call(this, scopedKey, legacyValue);
+                nativeRemove.call(this, originalKey);
+              }
+            }
+            return nativeGet.call(this, scopedKey);
+          }
+          return nativeGet.call(this, key);
+        };
+
+        Storage.prototype.setItem = function (key, value) {
+          return nativeSet.call(this, targetKey(key), value);
+        };
+
+        Storage.prototype.removeItem = function (key) {
+          return nativeRemove.call(this, targetKey(key));
+        };
+      })();
+    </script>
+    <script type="module" crossorigin src="./index-5DHErlMQ.js"></script>
+    <link rel="stylesheet" crossorigin href="./index-BA98gtg6.css">
+    <style>
+      :root {
+        --bg-grad-1: #f4f8f4;
+        --bg-grad-2: #eef5ef;
+        --bg-grad-3: #fff4e2;
+        --brand: #137a68;
+        --brand-strong: #0d574e;
+        --brand-soft: #e8f3ee;
+        --accent: #f4b74b;
+        --accent-2: #e98167;
+        --panel: rgba(255,255,255,0.88);
+        --panel-strong: #ffffff;
+        --line: rgba(23,59,54,0.14);
+        --text: #173b36;
+        --muted: #64736d;
+        --success: #168364;
+      }
+
+      body {
+        background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 48%, var(--bg-grad-3) 100%);
+        color: var(--text);
+      }
+
+      .app-shell {
+        background: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.8));
+      }
+
+      .sidebar {
+        background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(238,242,255,0.95));
+        border-right: 1px solid var(--line);
+        box-shadow: inset -1px 0 0 rgba(255,255,255,0.65);
+      }
+
+      .brand {
+        color: var(--brand-strong);
+        font-size: 1.15rem;
+      }
+
+      .nav-item {
+        border: 1px solid transparent;
+        transition: all 0.2s ease;
+      }
+
+      .nav-item.active {
+        background: linear-gradient(135deg, var(--brand-soft), #ffffff);
+        border-color: rgba(79,70,229,0.18);
+        color: var(--brand-strong);
+        box-shadow: 0 10px 26px rgba(79,70,229,0.12);
+      }
+
+      .nav-item:hover {
+        color: var(--brand-strong);
+        background: rgba(255,255,255,0.8);
+        border-color: rgba(79,70,229,0.12);
+      }
+
+      .voice-button {
+        background: linear-gradient(135deg, var(--brand), var(--accent-2));
+        color: #fff;
+        border-radius: 999px;
+        box-shadow: 0 15px 30px rgba(79,70,229,0.25);
+      }
+
+      .voice-button.listening {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        animation: pulseVoice 1.2s ease-in-out infinite;
+      }
+
+      @keyframes pulseVoice {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+        50% { transform: scale(1.04); box-shadow: 0 0 0 12px rgba(239,68,68,0.08); }
+      }
+
+      .search-wrap {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(99,102,241,0.12);
+        border-radius: 18px;
+        box-shadow: 0 18px 38px rgba(15,23,42,0.06);
+      }
+
+      .memento-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0 18px;
+      }
+
+      .memento-tab {
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--muted);
+        background: rgba(255,255,255,0.6);
+        border: 1px solid rgba(148,163,184,0.2);
+        transition: all 0.2s ease;
+      }
+
+      .memento-tab.active {
+        background: linear-gradient(135deg, var(--brand), var(--accent));
+        border-color: transparent;
+        box-shadow: 0 16px 30px rgba(79,70,229,0.2);
+        color: #fff;
+      }
+
+      .memento-status {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        min-height: 20px;
+      }
+
+      .memento-views {
+        margin-top: 18px;
+        display: none;
+      }
+
+      .memento-view {
+        display: none;
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 24px;
+        padding: 22px;
+        box-shadow: 0 24px 44px rgba(15,23,42,0.06);
+      }
+
+      .memento-view.active {
+        display: block;
+      }
+
+      .view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .view-header h2 {
+        margin: 0;
+        font-size: clamp(1.3rem, 2vw, 2rem);
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(79,70,229,0.08);
+        color: var(--brand-strong);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .task-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+      }
+
+      .task-card,
+      .memory-pill,
+      .plan-item,
+      .search-card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(237,242,255,0.85));
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 18px;
+        padding: 16px;
+      }
+
+      .task-card h3,
+      .plan-item h3,
+      .search-card h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .task-card p,
+      .plan-item p,
+      .search-card p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .input-row {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        border: 1px solid rgba(148,163,184,0.3);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.9);
+        padding: 12px 14px;
+        color: var(--text);
+      }
+
+      .primary-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--brand), var(--accent));
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 12px 24px rgba(79,70,229,0.24);
+      }
+
+      .mini-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .memory-pill,
+      .plan-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .tag {
+        display: inline-block;
+        width: fit-content;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(16,185,129,0.12);
+        color: #047857;
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .plan-item .meta {
+        display: flex;
+        justify-content: space-between;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      main.memento-task-mode > .content-inner {
+        display: none !important;
+      }
+
+      .memento-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .memento-summary {
+        display: grid;
+        gap: 6px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel-strong);
+      }
+
+      .memento-summary span,
+      .task-entry-meta {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .memento-summary strong {
+        font-size: 24px;
+      }
+
+      .task-board,
+      .task-list,
+      .recall-results,
+      .recent-memory-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .task-entry,
+      .memory-result {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel-strong);
+      }
+
+      .task-entry-header,
+      .task-entry-meta,
+      .memory-result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .task-entry-header {
+        align-items: flex-start;
+      }
+
+      .task-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .task-check input {
+        width: 18px;
+        height: 18px;
+        margin: 2px 0 0;
+        accent-color: var(--success);
+      }
+
+      .task-entry-title {
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+
+      .task-entry.completed .task-entry-title {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      .task-entry p,
+      .memory-result p {
+        margin: 8px 0;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+
+      .task-delete,
+      .memory-open-button {
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .task-delete:hover,
+      .memory-open-button:hover {
+        border-color: var(--brand);
+        color: var(--brand-strong);
+      }
+
+      .empty-state,
+      .form-feedback {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .form-feedback {
+        min-height: 20px;
+      }
+
+      .memory-result h3 {
+        margin: 0;
+      }
+
+      .memory-result-header {
+        align-items: flex-start;
+      }
+
+      .task-create-form,
+      .memento-capture-form {
+        margin-top: 12px;
+      }
+
+      @media (max-width: 640px) {
+        .memento-view {
+          padding: 16px;
+        }
+
+        .view-header {
+          align-items: flex-start;
+          gap: 12px;
+        }
+
+        .task-entry-meta {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 4px;
+        }
+      }
+
+      .app-shell {
+        min-height: calc(100vh - 112px);
+        background: transparent;
+      }
+
+      .sidebar {
+        width: 264px;
+        flex: 0 0 264px;
+        background: rgba(255,255,255,0.94);
+        border-right-color: var(--line);
+      }
+
+      .sidebar .brand { display: none; }
+
+      .nav-item.active {
+        background: #edf5f0;
+        border-color: rgba(19,122,104,0.2);
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+
+      .nav-item:hover { border-color: rgba(19,122,104,0.16); }
+
+      .voice-button {
+        background: linear-gradient(135deg, var(--brand), var(--accent-2));
+        box-shadow: 0 12px 24px rgba(19,122,104,0.2);
+      }
+
+      .search-wrap {
+        border-color: rgba(19,122,104,0.18);
+        box-shadow: 0 14px 30px rgba(23,59,54,0.06);
+      }
+
+      .memento-tab { border-radius: 8px; letter-spacing: 0; }
+      .memento-tab.active { background: var(--brand); box-shadow: 0 8px 18px rgba(19,122,104,0.18); }
+      .memento-view { border-radius: 12px; box-shadow: 0 14px 34px rgba(23,59,54,0.06); }
+      .task-card, .memory-pill, .plan-item, .search-card { border-radius: 8px; }
+      .chip { background: #edf5f0; color: var(--brand-strong); letter-spacing: 0.04em; }
+
+      .market-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        color: #fff;
+        background: #123d37;
+        box-shadow: 0 5px 18px rgba(14, 46, 40, .14);
+      }
+
+      .market-header-main {
+        display: grid;
+        grid-template-columns: auto minmax(220px, 1fr) auto;
+        align-items: center;
+        gap: clamp(14px, 2.5vw, 34px);
+        min-height: 68px;
+        padding: 10px clamp(16px, 3vw, 38px);
+      }
+
+      .market-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .market-brand-mark {
+        display: grid;
+        width: 36px;
+        aspect-ratio: 1;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #28443b;
+        font-family: Georgia, serif;
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .market-brand strong { font-family: Georgia, serif; font-size: 21px; font-weight: 600; }
+
+      .market-search {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        min-width: 0;
+        min-height: 42px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        border-radius: 7px;
+        background: #fff;
+      }
+
+      .market-search:focus-within { border-color: var(--accent); }
+      .market-search input { width: 100%; min-width: 0; padding: 9px 13px; border: 0; outline: 0; color: var(--text); background: #fff; }
+      .market-search input::placeholder { color: #72817a; }
+      .market-search button { min-width: 84px; padding: 0 16px; color: #263c34; background: var(--accent); font-weight: 800; }
+      .market-search button:hover { background: #ffcc6a; }
+
+      .market-account { display: flex; align-items: center; gap: 13px; min-width: 0; }
+      .market-account-copy { display: grid; gap: 2px; min-width: 0; }
+      .market-account-copy span { color: #d6e3dd; font-size: 11px; }
+      .market-account-copy strong { max-width: 160px; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+      .market-signout { min-height: 34px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 6px; color: white; font-size: 12px; font-weight: 700; }
+      .market-signout:hover { background: rgba(255,255,255,.1); }
+
+      .market-nav {
+        display: flex;
+        gap: 3px;
+        overflow-x: auto;
+        padding: 0 clamp(12px, 2.5vw, 32px) 8px;
+        scrollbar-width: thin;
+        background: #1a4a42;
+      }
+
+      .market-nav button {
+        flex: 0 0 auto;
+        min-height: 35px;
+        padding: 7px 12px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        color: #f3f7f4;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .market-nav button:hover,
+      .market-nav button.active { border-color: rgba(255,255,255,.26); background: rgba(255,255,255,.08); }
+
+      @media (max-width: 760px) {
+        .market-header-main { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding-inline: 14px; }
+        .market-search { grid-column: 1 / -1; grid-row: 2; }
+        .market-account { gap: 8px; }
+        .market-account-copy { display: none; }
+        .market-signout { min-height: 32px; }
+        .sidebar { width: 100%; flex: 0 0 auto; border-right: 0; border-bottom: 1px solid var(--line); }
+        .app-shell { display: block; min-height: calc(100vh - 140px); }
+        main { min-width: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script>
+      (function () {
+        const replaceText = (text, replacement) => {
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (node.nodeValue && node.nodeValue.includes(text)) {
+              node.nodeValue = node.nodeValue.replaceAll(text, replacement);
+            }
+          }
+        };
+
+        const brandNames = [
+          ['WhereDidI', 'Memento'],
+          ['Never lose the little things', 'Remember what matters most'],
+          ['Your memory space', 'Your fresh start'],
+          ['Your external memory', 'Your everyday memory'],
+          ['Alex Kim', 'Memento User'],
+          ['AK', 'MU'],
+          ['Personal space', 'Your smart space'],
+          ['Ask WhereDidI by voice', 'Ask Memento by voice'],
+          ['WhereDidI by voice', 'Memento by voice']
+        ];
+
+        const patchBranding = () => {
+          document.title = 'Memento — Smart memory for your day';
+          brandNames.forEach(([oldText, newText]) => replaceText(oldText, newText));
+        };
+
+        const MEMORY_STORAGE_KEY = 'wdi-memories';
+        const TASK_STORAGE_KEY = 'memento-tasks-v1';
+        const starterTasks = [
+          { id: 'plan-flight', section: 'plan', title: 'Friday flight', details: 'Pack passport, charger, and boarding pass.', due: 'Today', priority: 'High', completed: false },
+          { id: 'plan-pickup', section: 'plan', title: 'Grocery pickup', details: 'Collect groceries and drop off the umbrella.', due: 'Tonight', priority: 'Normal', completed: false },
+          { id: 'plan-entryway', section: 'plan', title: 'Reset the entryway', details: 'Put keys in the ceramic tray and check the spare set.', due: 'Tomorrow', priority: 'Normal', completed: false },
+          { id: 'plan-follow-up', section: 'plan', title: 'Client follow-up', details: 'Send the updated travel checklist and confirm payment.', due: 'Tomorrow', priority: 'High', completed: false },
+          { id: 'trip-itinerary', section: 'trips', title: 'Friday itinerary', details: 'Check times, boarding gate, and luggage tags.', due: 'Today', priority: 'High', completed: false },
+          { id: 'trip-documents', section: 'trips', title: 'Prepare travel folder', details: 'Keep passport, itinerary, and insurance together.', due: 'Today', priority: 'Normal', completed: false },
+          { id: 'trip-tech', section: 'trips', title: 'Pack tech pouch', details: 'Include charger, earphones, and power bank.', due: 'Tonight', priority: 'Normal', completed: false },
+          { id: 'home-entryway', section: 'home', title: 'Organize daily items', details: 'Place keys in the tray and the spare set in the drawer.', due: 'Tonight', priority: 'Normal', completed: false },
+          { id: 'home-groceries', section: 'home', title: 'Pick up groceries', details: 'Fruit, milk, and pantry refills.', due: 'Tomorrow', priority: 'Normal', completed: false },
+          { id: 'home-reset', section: 'home', title: 'Quick living room reset', details: 'Check the umbrella stand and tidy the side table.', due: 'Weekend', priority: 'Low', completed: false },
+          { id: 'people-client', section: 'people', title: 'Client check-in', details: 'Confirm the travel plan and updated budget notes.', due: 'Today', priority: 'High', completed: false },
+          { id: 'people-umbrella', section: 'people', title: 'Follow up on umbrella loan', details: 'Check in with Maria and arrange its return.', due: 'Tomorrow', priority: 'Normal', completed: false },
+          { id: 'people-friends', section: 'people', title: 'Send trip update', details: 'Share the travel dates and add the event reminder.', due: 'Weekend', priority: 'Low', completed: false }
+        ];
+
+        const readMemories = () => {
+          try {
+            const records = JSON.parse(localStorage.getItem(MEMORY_STORAGE_KEY) || '[]');
+            return Array.isArray(records) ? records : [];
+          } catch {
+            return [];
+          }
+        };
+
+        const loadTasks = () => {
+          try {
+            const stored = localStorage.getItem(TASK_STORAGE_KEY);
+            if (stored !== null) {
+              const records = JSON.parse(stored);
+              return Array.isArray(records) ? records : [];
+            }
+            const initialTasks = starterTasks.map((task) => ({ ...task }));
+            localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(initialTasks));
+            return initialTasks;
+          } catch {
+            return starterTasks.map((task) => ({ ...task }));
+          }
+        };
+
+        let taskItems = loadTasks();
+        let activeMementoView = 'dashboard';
+        let setMementoView = null;
+        let runRecallSearch = null;
+        let interactiveViews = null;
+        let recentMemoriesSignature = '';
+        let dashboardTasksSignature = '';
+
+        const saveTasks = () => {
+          try {
+            localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(taskItems));
+            return true;
+          } catch {
+            return false;
+          }
+        };
+
+        const setupInteractiveViews = (views) => {
+          interactiveViews = views;
+          const dashboard = views.querySelector('[data-view="dashboard"] .task-grid');
+          const capture = views.querySelector('[data-view="capture"] .task-grid');
+          const recall = views.querySelector('[data-view="recall"] .task-grid');
+          if (!dashboard || !capture || !recall) return;
+
+          dashboard.innerHTML = `
+            <div class="memento-summary-grid">
+              <div class="memento-summary"><span>Memories saved</span><strong data-summary-memories>0</strong></div>
+              <div class="memento-summary"><span>Pinned memories</span><strong data-summary-pinned>0</strong></div>
+              <div class="memento-summary"><span>Open tasks</span><strong data-summary-tasks>0</strong></div>
+            </div>
+            <div class="task-card">
+              <h3>Next up</h3>
+              <div class="task-list" data-dashboard-tasks></div>
+            </div>
+            <div class="task-card">
+              <h3>Memory library</h3>
+              <p>Browse everything you have saved, or narrow the list with the sidebar filters.</p>
+              <button class="primary-btn" type="button" data-open-memory-library>Open all memories</button>
+            </div>
+          `;
+
+          capture.innerHTML = `
+            <div class="task-card">
+              <h3>Save a memory</h3>
+              <form class="input-row memento-capture-form" data-capture-form>
+                <label class="field"><span>What is it?</span><input name="object" type="text" placeholder="e.g. Passport" autocomplete="off" required /></label>
+                <label class="field"><span>Where is it?</span><input name="location" type="text" placeholder="e.g. Blue drawer" autocomplete="off" required /></label>
+                <label class="field"><span>Why does it matter?</span><textarea name="reason" rows="3" placeholder="Add a helpful detail (optional)"></textarea></label>
+                <label class="field"><span>Category</span><select name="category" required><option value="">Choose a category</option><option>Travel</option><option>Home</option><option>People</option><option>Paperwork</option></select></label>
+                <button class="primary-btn" type="submit">Save memory</button>
+                <p class="form-feedback" data-capture-feedback role="status" aria-live="polite"></p>
+              </form>
+            </div>
+            <div class="task-card">
+              <h3>Recently saved</h3>
+              <div class="recent-memory-list" data-recent-memory-list></div>
+            </div>
+          `;
+
+          recall.innerHTML = `
+            <div class="search-card">
+              <h3>Search your memories</h3>
+              <form class="input-row" data-recall-form>
+                <label class="field"><span>What are you looking for?</span><input name="query" type="search" placeholder="Try “passport” or “blue drawer”" autocomplete="off" required /></label>
+                <button class="primary-btn" type="submit">Search</button>
+              </form>
+            </div>
+            <div class="task-card">
+              <h3>Matches</h3>
+              <div class="recall-results" data-recall-results role="status" aria-live="polite"><p class="empty-state">Search item names, locations, notes, or categories.</p></div>
+            </div>
+          `;
+
+          ['plan', 'trips', 'home', 'people'].forEach((sectionName) => {
+            const grid = views.querySelector(`[data-view="${sectionName}"] .task-grid`);
+            if (!grid) return;
+            grid.innerHTML = `
+              <div class="task-board" data-task-list="${sectionName}" aria-live="polite"></div>
+              <div class="task-card">
+                <h3>Add a task</h3>
+                <form class="input-row task-create-form" data-task-form="${sectionName}">
+                  <label class="field"><span>Task</span><input name="title" type="text" placeholder="What needs doing?" autocomplete="off" required /></label>
+                  <label class="field"><span>Details</span><textarea name="details" rows="2" placeholder="Optional notes"></textarea></label>
+                  <label class="field"><span>When</span><input name="due" type="text" placeholder="Today, tomorrow, or a date" /></label>
+                  <label class="field"><span>Priority</span><select name="priority"><option>Normal</option><option>High</option><option>Low</option></select></label>
+                  <button class="primary-btn" type="submit">Add task</button>
+                </form>
+              </div>
+            `;
+          });
+
+          const captureForm = views.querySelector('[data-capture-form]');
+          captureForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const formData = new FormData(form);
+            const object = String(formData.get('object') || '').trim();
+            const location = String(formData.get('location') || '').trim();
+            const reason = String(formData.get('reason') || '').trim();
+            const category = String(formData.get('category') || '').trim();
+            const feedback = views.querySelector('[data-capture-feedback]');
+            if (!object || !location || !category) {
+              feedback.textContent = 'Add an item, its location, and a category before saving.';
+              return;
+            }
+
+            const memory = {
+              id: Date.now(),
+              object,
+              location,
+              reason: reason || 'Saved with Memento',
+              date: 'No date',
+              category,
+              color: 'mint',
+              pinned: false,
+              created: 'Just now'
+            };
+
+            try {
+              localStorage.setItem(MEMORY_STORAGE_KEY, JSON.stringify([memory, ...readMemories()]));
+              sessionStorage.setItem('memento-next-view', 'memories');
+              sessionStorage.setItem('memento-notice', `Saved “${object}” to your memories.`);
+              window.location.reload();
+            } catch {
+              feedback.textContent = 'The memory could not be saved in this browser. Check storage settings and try again.';
+            }
+          });
+
+          const recallForm = views.querySelector('[data-recall-form]');
+          const recallInput = recallForm.querySelector('[name="query"]');
+          recallForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            renderRecallResults(views, recallInput.value);
+          });
+          runRecallSearch = (query) => {
+            if (typeof query === 'string') recallInput.value = query;
+            recallForm.requestSubmit();
+          };
+
+          views.querySelector('[data-open-memory-library]').addEventListener('click', () => {
+            setMementoView?.('memories');
+          });
+
+          views.querySelectorAll('[data-task-form]').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+              event.preventDefault();
+              const formData = new FormData(form);
+              const title = String(formData.get('title') || '').trim();
+              if (!title) return;
+              taskItems.unshift({
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                section: form.dataset.taskForm,
+                title,
+                details: String(formData.get('details') || '').trim(),
+                due: String(formData.get('due') || '').trim() || 'Unscheduled',
+                priority: String(formData.get('priority') || 'Normal'),
+                completed: false
+              });
+              const saved = saveTasks();
+              form.reset();
+              renderTaskLists(views);
+              refreshInteractiveViews();
+              const status = document.querySelector('.memento-status');
+              if (status) status.textContent = saved ? `Added “${title}” to ${form.dataset.taskForm}.` : 'Task added for this session, but browser storage is unavailable.';
+            });
+          });
+
+          renderTaskLists(views);
+          refreshInteractiveViews();
+        };
+
+        const renderRecallResults = (views, query) => {
+          const container = views.querySelector('[data-recall-results]');
+          const normalized = String(query || '').trim().toLowerCase();
+          container.replaceChildren();
+          if (!normalized) {
+            const message = document.createElement('p');
+            message.className = 'empty-state';
+            message.textContent = 'Enter a word to search your saved memories.';
+            container.appendChild(message);
+            return;
+          }
+
+          const ignoredWords = new Set(['where', 'what', 'when', 'who', 'have', 'does', 'did', 'put', 'the', 'are', 'was', 'can', 'you', 'your', 'this', 'that', 'with', 'from', 'find', 'show', 'tell', 'about']);
+          const terms = normalized.split(/\s+/).filter((term) => term.length > 2 && !ignoredWords.has(term));
+          const matches = readMemories().filter((memory) => {
+            const searchable = `${memory.object || ''} ${memory.location || ''} ${memory.reason || ''} ${memory.category || ''}`.toLowerCase();
+            return searchable.includes(normalized) || terms.some((term) => searchable.includes(term));
+          });
+
+          if (!matches.length) {
+            const message = document.createElement('p');
+            message.className = 'empty-state';
+            message.textContent = `No saved memory matched “${query.trim()}”. Try another item, place, or category.`;
+            container.appendChild(message);
+            return;
+          }
+
+          matches.forEach((memory) => {
+            const result = document.createElement('article');
+            result.className = 'memory-result';
+            const header = document.createElement('div');
+            header.className = 'memory-result-header';
+            const title = document.createElement('h3');
+            title.textContent = memory.object || 'Untitled memory';
+            const category = document.createElement('span');
+            category.className = 'tag';
+            category.textContent = memory.category || 'Other';
+            header.append(title, category);
+            const location = document.createElement('p');
+            location.textContent = `Location: ${memory.location || 'Not specified'}`;
+            const reason = document.createElement('p');
+            reason.textContent = memory.reason || 'No additional note.';
+            const openButton = document.createElement('button');
+            openButton.type = 'button';
+            openButton.className = 'memory-open-button';
+            openButton.textContent = 'Open in memory list';
+            openButton.addEventListener('click', () => {
+              setMementoView?.('memories');
+              const mainSearch = document.querySelector('.search-wrap input');
+              if (mainSearch) {
+                const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+                setter.call(mainSearch, memory.object || '');
+                mainSearch.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
+            result.append(header, location, reason, openButton);
+            container.appendChild(result);
+          });
+        };
+
+        const renderTaskLists = (views) => {
+          views.querySelectorAll('[data-task-list]').forEach((list) => {
+            const sectionName = list.dataset.taskList;
+            const records = taskItems.filter((task) => task.section === sectionName);
+            list.replaceChildren();
+            if (!records.length) {
+              const message = document.createElement('p');
+              message.className = 'empty-state';
+              message.textContent = 'No tasks here yet. Add one using the form.';
+              list.appendChild(message);
+              return;
+            }
+
+            records.forEach((task) => {
+              const entry = document.createElement('article');
+              entry.className = `task-entry${task.completed ? ' completed' : ''}`;
+              const header = document.createElement('div');
+              header.className = 'task-entry-header';
+              const label = document.createElement('label');
+              label.className = 'task-check';
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+              checkbox.checked = Boolean(task.completed);
+              checkbox.setAttribute('aria-label', `${task.completed ? 'Reopen' : 'Complete'} ${task.title}`);
+              const title = document.createElement('span');
+              title.className = 'task-entry-title';
+              title.textContent = task.title;
+              label.append(checkbox, title);
+              const removeButton = document.createElement('button');
+              removeButton.type = 'button';
+              removeButton.className = 'task-delete';
+              removeButton.textContent = 'Delete';
+              removeButton.setAttribute('aria-label', `Delete ${task.title}`);
+              header.append(label, removeButton);
+              entry.appendChild(header);
+              if (task.details) {
+                const details = document.createElement('p');
+                details.textContent = task.details;
+                entry.appendChild(details);
+              }
+              const meta = document.createElement('div');
+              meta.className = 'task-entry-meta';
+              const due = document.createElement('span');
+              due.textContent = task.due || 'Unscheduled';
+              const priority = document.createElement('span');
+              priority.textContent = `${task.priority || 'Normal'} priority`;
+              meta.append(due, priority);
+              entry.appendChild(meta);
+              checkbox.addEventListener('change', () => {
+                task.completed = checkbox.checked;
+                saveTasks();
+                renderTaskLists(views);
+                refreshInteractiveViews();
+              });
+              removeButton.addEventListener('click', () => {
+                taskItems = taskItems.filter((item) => item.id !== task.id);
+                saveTasks();
+                renderTaskLists(views);
+                refreshInteractiveViews();
+              });
+              list.appendChild(entry);
+            });
+          });
+        };
+
+        const setSummaryValue = (views, selector, value) => {
+          const element = views.querySelector(selector);
+          if (element && element.textContent !== String(value)) element.textContent = String(value);
+        };
+
+        const renderDashboard = (views) => {
+          const memories = readMemories();
+          const openTasks = taskItems.filter((task) => !task.completed);
+          setSummaryValue(views, '[data-summary-memories]', memories.length);
+          setSummaryValue(views, '[data-summary-pinned]', memories.filter((memory) => memory.pinned).length);
+          setSummaryValue(views, '[data-summary-tasks]', openTasks.length);
+
+          const list = views.querySelector('[data-dashboard-tasks]');
+          const upcoming = openTasks.slice(0, 3);
+          const signature = JSON.stringify(upcoming.map((task) => [task.id, task.title, task.section, task.due]));
+          if (!list || signature === dashboardTasksSignature) return;
+          dashboardTasksSignature = signature;
+          list.replaceChildren();
+          if (!upcoming.length) {
+            const message = document.createElement('p');
+            message.className = 'empty-state';
+            message.textContent = 'You are all caught up. Add a task from Plan, Trips, Home, or People.';
+            list.appendChild(message);
+            return;
+          }
+          upcoming.forEach((task) => {
+            const item = document.createElement('div');
+            item.className = 'memory-pill';
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = task.section;
+            const title = document.createElement('p');
+            title.textContent = `${task.title} · ${task.due || 'Unscheduled'}`;
+            item.append(tag, title);
+            list.appendChild(item);
+          });
+        };
+
+        const renderRecentMemories = (views) => {
+          const list = views.querySelector('[data-recent-memory-list]');
+          if (!list) return;
+          const memories = readMemories().slice(0, 4);
+          const signature = JSON.stringify(memories.map((memory) => [memory.id, memory.object, memory.location, memory.pinned]));
+          if (signature === recentMemoriesSignature) return;
+          recentMemoriesSignature = signature;
+          list.replaceChildren();
+          if (!memories.length) {
+            const message = document.createElement('p');
+            message.className = 'empty-state';
+            message.textContent = 'Your saved memories will appear here.';
+            list.appendChild(message);
+            return;
+          }
+          memories.forEach((memory) => {
+            const item = document.createElement('div');
+            item.className = 'memory-pill';
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = memory.category || 'Other';
+            const title = document.createElement('p');
+            title.textContent = `${memory.object || 'Untitled'} · ${memory.location || 'Location not set'}`;
+            item.append(tag, title);
+            list.appendChild(item);
+          });
+        };
+
+        const updateSidebarCounts = () => {
+          const navItems = document.querySelectorAll('.nav-item[data-memento-menu]');
+          const memoryCount = readMemories().length;
+          navItems.forEach((item) => {
+            const count = item.querySelector('.count');
+            if (!count) return;
+            const view = item.dataset.view;
+            let value = count.textContent;
+            if (view === 'capture') value = String(memoryCount);
+            if (['plan', 'trips', 'home', 'people'].includes(view)) {
+              value = String(taskItems.filter((task) => task.section === view && !task.completed).length);
+            }
+            if (count.textContent !== value) count.textContent = value;
+          });
+        };
+
+        const refreshInteractiveViews = () => {
+          if (!interactiveViews) return;
+          renderDashboard(interactiveViews);
+          renderRecentMemories(interactiveViews);
+          updateSidebarCounts();
+        };
+
+        const placeMementoUI = (main, tabs, status, views) => {
+          if (!main) return;
+          let anchor = main.querySelector('.content-inner');
+          if (!anchor && main.contains(views)) anchor = views;
+          [tabs, status].forEach((element) => {
+            if (!element || main.contains(element)) return;
+            if (anchor && main.contains(anchor)) main.insertBefore(element, anchor);
+            else main.appendChild(element);
+          });
+          if (!main.contains(views)) main.appendChild(views);
+        };
+
+        const ensureTaskTabs = () => {
+          const existingTabs = document.querySelector('.memento-tabs');
+          const existingViews = document.querySelector('.memento-views');
+          if (existingTabs && existingViews) {
+            const main = document.querySelector('main');
+            if (main) {
+              const status = document.querySelector('.memento-status');
+              placeMementoUI(main, existingTabs, status, existingViews);
+              const savedView = sessionStorage.getItem('memento-next-view');
+              if (savedView && (savedView === 'memories' || existingViews.querySelector(`[data-view="${savedView}"]`))) {
+                sessionStorage.removeItem('memento-next-view');
+                setMementoView?.(savedView);
+              } else {
+                setMementoView?.(activeMementoView);
+              }
+              const notice = sessionStorage.getItem('memento-notice');
+              if (notice && status) status.textContent = notice;
+              sessionStorage.removeItem('memento-notice');
+            }
+            return;
+          }
+
+          const pane = document.querySelector('main') || document.querySelector('.main-panel') || document.body;
+          const tabs = existingTabs || document.createElement('div');
+          if (!existingTabs) {
+            tabs.className = 'memento-tabs';
+            tabs.innerHTML = `
+              <button class="memento-tab active" data-view="dashboard">Dashboard</button>
+              <button class="memento-tab" data-view="capture">Capture</button>
+              <button class="memento-tab" data-view="recall">Recall</button>
+              <button class="memento-tab" data-view="plan">Plan</button>
+              <button class="memento-tab" data-view="trips">Trips</button>
+              <button class="memento-tab" data-view="home">Home</button>
+              <button class="memento-tab" data-view="people">People</button>
+            `;
+          }
+
+          const status = document.querySelector('.memento-status') || document.createElement('div');
+          if (!status.classList?.contains('memento-status')) {
+            status.className = 'memento-status';
+            status.textContent = 'Voice input is ready. Tap the mic and say a memory you want to save.';
+          }
+
+          const target = pane.querySelector('.app-header, .page-header, header, .content-stack') || pane;
+          if (!existingTabs) {
+            if (target.firstChild) {
+              target.insertBefore(status, target.firstChild);
+              target.insertBefore(tabs, target.firstChild);
+            } else {
+              target.appendChild(tabs);
+              target.appendChild(status);
+            }
+          }
+
+          const views = existingViews || document.createElement('div');
+          if (!existingViews) {
+            views.className = 'memento-views';
+            views.innerHTML = `
+              <section class="memento-view active" data-view="dashboard">
+                <div class="view-header">
+                  <h2>Dashboard</h2>
+                  <span class="chip">Overview</span>
+                </div>
+                <div class="task-grid">
+                  <div class="task-card">
+                    <h3>Today at a glance</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Travel</span><p>3 items to review before the trip</p></span>
+                      <span class="memory-pill"><span class="tag">Home</span><p>2 reminders still need action</p></span>
+                      <span class="memory-pill"><span class="tag">People</span><p>1 important contact to follow up</p></span>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Priority tasks</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Now</span><p>Confirm boarding pass and passport</p></span>
+                      <span class="memory-pill"><span class="tag">Soon</span><p>Pack charger cable and medication</p></span>
+                      <span class="memory-pill"><span class="tag">Later</span><p>Reset entryway before dinner</p></span>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Quick notes</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Tip</span><p>Store keys near the front door tray</p></span>
+                      <span class="memory-pill"><span class="tag">Tip</span><p>Keep receipts in the gadget folder</p></span>
+                      <span class="memory-pill"><span class="tag">Tip</span><p>Log high-value items as soon as they are found</p></span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="capture">
+                <div class="view-header">
+                  <h2>Capture a memory</h2>
+                  <span class="chip">Quick save</span>
+                </div>
+                <div class="task-grid">
+                  <div class="task-card">
+                    <h3>New item</h3>
+                    <div class="input-row">
+                      <label class="field">
+                        <span>What did you save?</span>
+                        <input value="Passport" />
+                      </label>
+                      <label class="field">
+                        <span>Where is it?</span>
+                        <input value="Blue drawer" />
+                      </label>
+                      <label class="field">
+                        <span>Why does it matter?</span>
+                        <textarea rows="3">For the trip on Friday</textarea>
+                      </label>
+                      <label class="field">
+                        <span>Category</span>
+                        <select>
+                          <option>Travel</option>
+                          <option>Home</option>
+                          <option>People</option>
+                          <option>Paperwork</option>
+                        </select>
+                      </label>
+                      <button class="primary-btn" type="button">Save memory</button>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Fast capture ideas</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Keys</span><p>Left by the front door</p></span>
+                      <span class="memory-pill"><span class="tag">Receipt</span><p>In the gadget folder</p></span>
+                      <span class="memory-pill"><span class="tag">Umbrella</span><p>Front desk borrowed</p></span>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Today’s capture queue</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Travel</span><p>Boarding pass in wallet</p></span>
+                      <span class="memory-pill"><span class="tag">Home</span><p>Houseplant key under mat</p></span>
+                      <span class="memory-pill"><span class="tag">Paperwork</span><p>Car insurance in bedroom drawer</p></span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="recall">
+                <div class="view-header">
+                  <h2>Recall</h2>
+                  <span class="chip">Find fast</span>
+                </div>
+                <div class="task-grid">
+                  <div class="search-card">
+                    <h3>Search memories</h3>
+                    <div class="input-row">
+                      <label class="field">
+                        <span>Ask Memento</span>
+                        <input value="Where is my passport?" />
+                      </label>
+                      <button class="primary-btn" type="button">Search</button>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Recent matches</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Travel</span><p>Passport — Blue drawer</p></span>
+                      <span class="memory-pill"><span class="tag">Home</span><p>Spare keys — Plant pot</p></span>
+                      <span class="memory-pill"><span class="tag">People</span><p>Umbrella — Front desk</p></span>
+                    </div>
+                  </div>
+                  <div class="task-card">
+                    <h3>Open questions</h3>
+                    <div class="mini-actions">
+                      <span class="memory-pill"><span class="tag">Need</span><p>Where is the charger cable?</p></span>
+                      <span class="memory-pill"><span class="tag">Need</span><p>Who borrowed the spare key?</p></span>
+                      <span class="memory-pill"><span class="tag">Need</span><p>Where did I put the receipt?</p></span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="plan">
+                <div class="view-header">
+                  <h2>Plan</h2>
+                  <span class="chip">Today</span>
+                </div>
+                <div class="task-grid">
+                  <div class="plan-item">
+                    <span class="tag">Trip</span>
+                    <h3>Friday flight</h3>
+                    <p>Pack passport, charger, and boarding pass.</p>
+                    <div class="meta"><span>3:00 PM</span><span>High priority</span></div>
+                  </div>
+                  <div class="plan-item">
+                    <span class="tag">Errand</span>
+                    <h3>Pickup</h3>
+                    <p>Collect the groceries and drop off the umbrella.</p>
+                    <div class="meta"><span>Tonight</span><span>Low effort</span></div>
+                  </div>
+                  <div class="plan-item">
+                    <span class="tag">Home</span>
+                    <h3>Reset the entryway</h3>
+                    <p>Put keys in the ceramic tray and check the spare set.</p>
+                    <div class="meta"><span>Tomorrow</span><span>Routine</span></div>
+                  </div>
+                  <div class="plan-item">
+                    <span class="tag">Focus</span>
+                    <h3>Client follow-up</h3>
+                    <p>Send the updated travel checklist and confirm payment.</p>
+                    <div class="meta"><span>Tomorrow</span><span>Medium</span></div>
+                  </div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="trips">
+                <div class="view-header">
+                  <h2>Trips</h2>
+                  <span class="chip">Travel tasks</span>
+                </div>
+                <div class="task-grid">
+                  <div class="plan-item"><span class="tag">Flight</span><h3>Friday itinerary</h3><p>Check times, boarding gate, and luggage tags.</p><div class="meta"><span>11:00 AM</span><span>Priority</span></div></div>
+                  <div class="plan-item"><span class="tag">Documents</span><h3>Travel folder</h3><p>Keep passport, itinerary, and insurance in one spot.</p><div class="meta"><span>Today</span><span>Ready</span></div></div>
+                  <div class="plan-item"><span class="tag">Packing</span><h3>Tech pouch</h3><p>Include charger, earphones, and power bank.</p><div class="meta"><span>Tonight</span><span>Easy</span></div></div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="home">
+                <div class="view-header">
+                  <h2>Home</h2>
+                  <span class="chip">Household tasks</span>
+                </div>
+                <div class="task-grid">
+                  <div class="plan-item"><span class="tag">Entryway</span><h3>Organize daily items</h3><p>Place keys in tray and the spare set in the drawer.</p><div class="meta"><span>Tonight</span><span>Routine</span></div></div>
+                  <div class="plan-item"><span class="tag">Kitchen</span><h3>Groceries</h3><p>Pick up fruit, milk, and refills for the pantry.</p><div class="meta"><span>Tomorrow</span><span>Low effort</span></div></div>
+                  <div class="plan-item"><span class="tag">Living</span><h3>Quick reset</h3><p>Check the umbrella stand and tidy the side table.</p><div class="meta"><span>Weekend</span><span>Light</span></div></div>
+                </div>
+              </section>
+              <section class="memento-view" data-view="people">
+                <div class="view-header">
+                  <h2>People</h2>
+                  <span class="chip">Connections</span>
+                </div>
+                <div class="task-grid">
+                  <div class="plan-item"><span class="tag">Follow up</span><h3>Client check-in</h3><p>Confirm the travel plan and updated budget notes.</p><div class="meta"><span>Today</span><span>High</span></div></div>
+                  <div class="plan-item"><span class="tag">Shared item</span><h3>Umbrella loan</h3><p>Follow up on the borrowed umbrella and return it.</p><div class="meta"><span>Tomorrow</span><span>Medium</span></div></div>
+                  <div class="plan-item"><span class="tag">Keep in touch</span><h3>Friends</h3><p>Send the trip date update and add the event reminder.</p><div class="meta"><span>Weekend</span><span>Warm</span></div></div>
+                </div>
+              </section>
+            `;
+            const root = document.getElementById('root');
+            const main = document.querySelector('main');
+            if (main) {
+              main.appendChild(views);
+            } else if (root) {
+              root.appendChild(views);
+            } else {
+              document.body.appendChild(views);
+            }
+          }
+
+          placeMementoUI(document.querySelector('main'), tabs, status, views);
+          setupInteractiveViews(views);
+
+          const setView = (viewName) => {
+            activeMementoView = viewName;
+            const allViews = views.querySelectorAll('.memento-view');
+            allViews.forEach((view) => view.classList.toggle('active', view.dataset.view === viewName));
+            tabs.querySelectorAll('.memento-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.view === viewName));
+            document.querySelectorAll('.market-nav [data-market-view]').forEach((item) => {
+              const isActive = item.dataset.marketView === viewName;
+              item.classList.toggle('active', isActive);
+              if (isActive) item.setAttribute('aria-current', 'page');
+              else item.removeAttribute('aria-current');
+            });
+            document.querySelectorAll('.nav-item[data-memento-menu]').forEach((item) => {
+              item.classList.toggle('active', item.dataset.view === viewName);
+            });
+            const main = document.querySelector('main');
+            if (main) {
+              main.style.display = 'block';
+              main.classList.toggle('memento-task-mode', viewName !== 'memories');
+            }
+            views.style.display = viewName === 'memories' ? 'none' : 'block';
+            syncStatusText(viewName);
+          };
+          setMementoView = setView;
+
+          const syncStatusText = (view) => {
+            if (view === 'capture') status.textContent = 'Capture mode: add the item, where it lives, and why it matters.';
+            if (view === 'recall') status.textContent = 'Recall mode: ask for the last place you left something important.';
+            if (view === 'plan') status.textContent = 'Plan mode: keep your next task, trip, or errand in one place.';
+            if (view === 'trips') status.textContent = 'Trips mode: keep travel docs, itineraries, and packing tasks together.';
+            if (view === 'home') status.textContent = 'Home mode: track routines, groceries, and household resets.';
+            if (view === 'people') status.textContent = 'People mode: keep follow-ups and shared-item check-ins on track.';
+            if (view === 'dashboard') status.textContent = 'Voice input is ready. Tap the mic and say a memory you want to save.';
+            if (view === 'memories') status.textContent = 'Memory library: use All memories, Pinned, or a category in the sidebar to filter.';
+          };
+
+          tabs.addEventListener('click', (event) => {
+            const button = event.target.closest('.memento-tab');
+            if (!button) return;
+            const view = button.dataset.view;
+            setView(view);
+          });
+
+          const appMounted = Boolean(document.querySelector('main'));
+          const savedView = appMounted ? sessionStorage.getItem('memento-next-view') : null;
+          if (appMounted) sessionStorage.removeItem('memento-next-view');
+          const initialView = savedView === 'memories' || views.querySelector(`[data-view="${savedView}"]`) ? savedView : 'dashboard';
+          setView(initialView);
+          const notice = appMounted ? sessionStorage.getItem('memento-notice') : null;
+          if (notice) status.textContent = notice;
+          if (appMounted) sessionStorage.removeItem('memento-notice');
+        };
+
+        const ensureSidebarTabs = () => {
+          const navList = document.querySelector('.nav-list');
+          if (!navList) return;
+
+          const sidebar = navList.closest('.sidebar');
+          if (sidebar && !sidebar.dataset.mementoRoutesPatched) {
+            sidebar.dataset.mementoRoutesPatched = 'true';
+            sidebar.addEventListener('click', (event) => {
+              const item = event.target.closest('.nav-item');
+              if (!item || item.dataset.mementoMenu === 'true') return;
+              setMementoView?.('memories');
+            });
+          }
+
+          if (navList.querySelector('[data-memento-menu]')) return;
+
+          const tasks = [
+            { label: 'Dashboard', view: 'dashboard', icon: '⌂', count: 'Live' },
+            { label: 'Capture', view: 'capture', icon: '✦', count: '0' },
+            { label: 'Recall', view: 'recall', icon: '⌁', count: 'Find' },
+            { label: 'Plan', view: 'plan', icon: '✓', count: '0' },
+            { label: 'Trips', view: 'trips', icon: '✈', count: '0' },
+            { label: 'Home', view: 'home', icon: '⌂', count: '0' },
+            { label: 'People', view: 'people', icon: '◌', count: '0' }
+          ];
+
+          tasks.forEach((task) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'nav-item';
+            item.dataset.mementoMenu = 'true';
+            item.dataset.view = task.view;
+            item.innerHTML = `
+              <span class="nav-icon">${task.icon}</span>
+              <span>${task.label}</span>
+              <span class="count">${task.count}</span>
+            `;
+            item.addEventListener('click', () => {
+              const matchedTab = document.querySelector(`.memento-tab[data-view="${task.view}"]`);
+              if (matchedTab) matchedTab.click();
+            });
+            navList.appendChild(item);
+          });
+          document.querySelectorAll('.nav-item[data-memento-menu]').forEach((item) => {
+            item.classList.toggle('active', item.dataset.view === activeMementoView);
+          });
+          updateSidebarCounts();
+        };
+
+        const ensureMarketplaceHeader = () => {
+          const root = document.getElementById('root');
+          const appShell = root?.querySelector('.app-shell');
+          if (!root || !appShell || root.querySelector('.market-header')) return;
+
+          const header = document.createElement('header');
+          header.className = 'market-header';
+          header.innerHTML = `
+            <div class="market-header-main">
+              <a class="market-brand" href="/" aria-label="Memento dashboard">
+                <span class="market-brand-mark" aria-hidden="true">M</span>
+                <strong>Memento</strong>
+              </a>
+              <form class="market-search" data-market-search-form role="search">
+                <input type="search" data-market-search aria-label="Search saved memories" placeholder="Search your memories and places" autocomplete="off" />
+                <button type="submit">Search</button>
+              </form>
+              <div class="market-account">
+                <div class="market-account-copy"><span>Signed in as</span><strong data-account-name></strong></div>
+                <button class="market-signout" type="button" data-sign-out>Sign out</button>
+              </div>
+            </div>
+            <nav class="market-nav" aria-label="Memento sections">
+              <button type="button" data-market-view="memories">All memories</button>
+              <button type="button" data-market-view="dashboard">Overview</button>
+              <button type="button" data-market-view="capture">Capture</button>
+              <button type="button" data-market-view="recall">Recall</button>
+              <button type="button" data-market-view="plan">Plan</button>
+              <button type="button" data-market-view="trips">Trips</button>
+              <button type="button" data-market-view="home">Home</button>
+              <button type="button" data-market-view="people">People</button>
+            </nav>
+          `;
+
+          const accountName = header.querySelector('[data-account-name]');
+          accountName.textContent = window.MEMENTO_ACCOUNT?.name || 'Memento User';
+
+          header.querySelector('[data-market-search-form]').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const query = header.querySelector('[data-market-search]').value.trim();
+            if (!query) {
+              setMementoView?.('memories');
+              return;
+            }
+            setMementoView?.('recall');
+            runRecallSearch?.(query);
+          });
+
+          header.querySelectorAll('[data-market-view]').forEach((button) => {
+            button.addEventListener('click', () => setMementoView?.(button.dataset.marketView));
+          });
+
+          header.querySelector('[data-sign-out]').addEventListener('click', async (event) => {
+            const button = event.currentTarget;
+            button.disabled = true;
+            try {
+              await fetch('/api/auth/logout', { method: 'POST' });
+            } finally {
+              window.location.assign('/login');
+            }
+          });
+
+          root.insertBefore(header, appShell);
+          header.querySelectorAll('[data-market-view]').forEach((item) => {
+            const isActive = item.dataset.marketView === activeMementoView;
+            item.classList.toggle('active', isActive);
+            if (isActive) item.setAttribute('aria-current', 'page');
+          });
+        };
+
+        const patchVoiceButton = () => {
+          const voiceButton = document.querySelector('.voice-button');
+          if (!voiceButton || voiceButton.dataset.mementoVoicePatched) return;
+
+          voiceButton.dataset.mementoVoicePatched = 'true';
+          const inputTarget = document.querySelector('.search-wrap input, .search-wrap textarea, input[type="text"], textarea');
+
+          const handleSpeech = async () => {
+            const speechApi = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!speechApi) {
+              const msg = 'Voice chat needs Chrome or Safari with microphone access enabled.';
+              if (inputTarget) inputTarget.value = msg;
+              return;
+            }
+
+            const permission = await navigator.mediaDevices?.getUserMedia?.({ audio: true }).catch(() => null);
+            if (!permission) {
+              const msg = 'Microphone permission is blocked. Please allow access and try again.';
+              if (inputTarget) inputTarget.value = msg;
+              return;
+            }
+
+            permission.getTracks().forEach((track) => track.stop());
+
+            const recognition = new speechApi();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = false;
+
+            voiceButton.classList.add('listening');
+            voiceButton.setAttribute('aria-label', 'Listening for your request');
+
+            recognition.onresult = (event) => {
+              const transcript = Array.from(event.results)
+                .map((result) => result[0]?.transcript || '')
+                .join(' ')
+                .trim();
+
+              if (transcript && inputTarget) {
+                inputTarget.value = transcript;
+                inputTarget.dispatchEvent(new Event('input', { bubbles: true }));
+                if (activeMementoView === 'recall' && runRecallSearch) runRecallSearch(transcript);
+              }
+            };
+
+            recognition.onerror = (event) => {
+              const errorMessage = event.error === 'not-allowed'
+                ? 'Microphone access was denied. Please allow it to keep using voice.'
+                : 'I could not hear you clearly. Please try again or type your request instead.';
+              if (inputTarget) inputTarget.value = errorMessage;
+              voiceButton.classList.remove('listening');
+            };
+
+            recognition.onend = () => {
+              voiceButton.classList.remove('listening');
+              voiceButton.setAttribute('aria-label', 'Ask Memento by voice');
+            };
+
+            recognition.start();
+          };
+
+          voiceButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            handleSpeech();
+          });
+        };
+
+        const init = () => {
+          patchBranding();
+          ensureTaskTabs();
+          ensureSidebarTabs();
+          ensureMarketplaceHeader();
+          patchVoiceButton();
+          refreshInteractiveViews();
+        };
+
+        const observer = new MutationObserver(() => {
+          init();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        init();
+      })();
+    </script>
+  </body>
+</html>
+
