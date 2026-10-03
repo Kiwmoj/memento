@@ -1,6 +1,6 @@
-# WhereDidI
+# Memento
 
-WhereDidI is an external memory for everyday things. Save what an item is, where it is (or who has it) and why it matters, then find it later by typing or asking out loud.
+Memento is an external memory for everyday things. Save what an item is, where it is (or who has it) and why it matters, then find it later by typing or asking out loud.
 
 Built with Flask on the server and plain HTML, CSS and JavaScript in the browser. There is no Node.js, npm or build step.
 

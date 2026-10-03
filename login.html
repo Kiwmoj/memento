@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#123d37" />
     <meta name="description" content="Sign in to your Memento memory workspace." />
-    <title>WhereDidI | Sign in</title>
+    <title>Memento | Sign in</title>
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <style>
       :root {
@@ -168,7 +168,7 @@
       <header class="topbar">
         <a class="brand" href="/login" aria-label="Memento home">
           <img src="/logo.svg" alt="" />
-          <strong>WhereDidI</strong>
+          <strong>Memento</strong>
         </a>
         <span class="topbar-note">A thoughtful place for everyday details</span>
       </header>
@@ -214,7 +214,7 @@
         </section>
       </main>
 
-      <footer class="footer">WhereDidI · Your memories stay on this device.</footer>
+      <footer class="footer">Memento · Your memories stay on this device.</footer>
     </div>
 
     <script>
@@ -234,7 +234,7 @@
           nameField.hidden = !registering;
           nameField.querySelector('input').required = registering;
           passwordInput.autocomplete = registering ? 'new-password' : 'current-password';
-          document.title = registering ? 'WhereDidI | Create account' : 'WhereDidI | Sign in';
+          document.title = registering ? 'Memento | Create account' : 'Memento | Sign in';
           heading.textContent = registering ? 'Create your account' : 'Welcome back';
           intro.textContent = registering ? 'Set up your personal memory workspace.' : 'Sign in to open your memory workspace.';
           submitButton.textContent = registering ? 'Create account' : 'Sign in';
